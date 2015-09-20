@@ -16,6 +16,7 @@ if [ -z "`which docker`" ]; then
     exit 1
 fi
 
+GUI_PORT=${GUI_PORT:-8080}
 ACTION=${ACTION:-deploy}
 IMAGE=${IMAGE:-shipyard/shipyard:latest}
 PREFIX=${PREFIX:-shipyard}
@@ -175,7 +176,7 @@ start_controller() {
         --name $PREFIX-controller \
         --link $PREFIX-rethinkdb:rethinkdb \
         --link $PREFIX-swarm:swarm \
-        -p 8080:8080 \
+        -p $GUI_PORT:8080 \
         --volumes-from=$PREFIX-certs \
         $IMAGE \
         server \
@@ -229,9 +230,9 @@ if [ "$ACTION" = "deploy" ]; then
 
     get_shipyard_ip 
 
-    wait_for_available $SHIPYARD_IP 8080
+    wait_for_available $SHIPYARD_IP $GUI_PORT
 
-    echo "Shipyard available at $SHIPYARD_PROTOCOL://$SHIPYARD_IP:8080"
+    echo "Shipyard available at $SHIPYARD_PROTOCOL://$SHIPYARD_IP:$GUI_PORT"
     if [ $ENABLE_TLS = 1 ] && [ ! -z "$CERT_FINGERPRINT" ]; then
         echo "SSL SHA-256 Fingerprint: $CERT_FINGERPRINT"
     fi
@@ -252,7 +253,7 @@ elif [ "$ACTION" = "upgrade" ]; then
 
     get_shipyard_ip
     
-    wait_for_available $SHIPYARD_IP 8080
+    wait_for_available $SHIPYARD_IP $GUI_PORT
 
     echo "Shipyard controller updated"
 
